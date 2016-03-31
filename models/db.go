@@ -4,7 +4,9 @@ import (
 	"github.com/qgweb/gossdb"
 )
 
-type SDBType gossdb.Value
+type SDBType struct {
+	gossdb.Value
+}
 
 type SDB struct {
 }
@@ -39,11 +41,11 @@ func (this SDB) Size(db string) (int64, error) {
 func (this SDB) Get(db string, key string) (SDBType, error) {
 	client, err := dbpool.NewClient()
 	if err != nil {
-		return "", err
+		return SDBType{}, err
 	}
 	defer client.Close()
 	v, err := client.Hget(db, key)
-	return SDBType(v), err
+	return SDBType{v}, err
 }
 
 func (this SDB) Del(db string, key string) error {
@@ -74,7 +76,7 @@ func (this SDB) Scan(db string, bkey string, ekey string, limit int64) (map[stri
 	v, err := client.Hscan(db, bkey, ekey, limit)
 	if v != nil {
 		for k, vv := range v {
-			res[k] = SDBType(vv)
+			res[k] = SDBType{vv}
 		}
 	}
 	return res, err
