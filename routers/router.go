@@ -11,4 +11,5 @@ func init() {
 	beego.Router("/api/update", &controllers.MainController{},"post:Post")
 	beego.Router("/api/list", &controllers.MainController{},"get:List")
 	beego.Router("/api/delete", &controllers.MainController{},"delete:Delete")
+	beego.Router("/stats", &controllers.ViewController{},"get:Index")
 }
