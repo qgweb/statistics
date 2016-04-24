@@ -6,10 +6,10 @@ import (
 	"github.com/bitly/go-simplejson"
 	"github.com/juju/errors"
 	"github.com/qgweb/new/lib/convert"
+	"github.com/qgweb/new/lib/timestamp"
 	"net/url"
 	"sort"
 	"strings"
-	"github.com/qgweb/new/lib/timestamp"
 )
 
 type DataResult struct {
@@ -19,7 +19,7 @@ type DataResult struct {
 
 type ViewDataResultAry struct {
 	Timestamp string
-	Data DataResultAry
+	Data      DataResultAry
 }
 
 type DataResultAry []DataResult
@@ -150,7 +150,7 @@ func (this *ViewController) merageData(btime int, etime int, ds ...DataResultAry
 	for t := etime; t > btime; t = t - 3600 {
 		var drs = ViewDataResultAry{}
 		drs.Timestamp = timestamp.GetUnixFormat(convert.ToString(t))
-		drs.Data = make(DataResultAry,0,len(ds))
+		drs.Data = make(DataResultAry, 0, len(ds))
 		for _, v := range ds {
 			for _, vv := range v {
 				if convert.ToString(t) == vv.Timestamp {
@@ -166,12 +166,20 @@ func (this *ViewController) merageData(btime int, etime int, ds ...DataResultAry
 }
 
 func (this *ViewController) Index() {
-	source := this.sourceData("zj_1461067000", "zj_1461268800")
-	advert := this.advertData("zj_1461067000", "zj_1461268800")
-	dianx := this.dianxinData("zj_1461067000", "zj_1461268800")
+	var (
+		pre   = this.GetString("qy", "zj")
+		btime = this.GetString("btime", pre+"_"+
+			convert.ToString(convert.ToInt(timestamp.GetDayTimestamp(0))-3600))
+		etime = this.GetString("etime", pre+"_"+timestamp.GetHourTimestamp(-1))
+	)
+
+	source := this.sourceData(btime, etime)
+	advert := this.advertData(btime, etime)
+	dianx := this.dianxinData(btime, etime)
 	beego.Error(source)
 	beego.Error(advert)
 	beego.Error(dianx)
-	this.Data["info"] = this.merageData(1461254400,1461268800, source,advert,dianx)
+	this.Data["info"] = this.merageData(convert.ToInt(btime), convert.ToInt(etime),
+		source, advert, dianx)
 	this.TplName = "view.tpl"
 }
