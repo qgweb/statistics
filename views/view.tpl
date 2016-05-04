@@ -11,51 +11,34 @@
     <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 </head>
 <body>
-<div class="btn-group" role="group" >
+<div class="btn-group" role="group">
     <a type="button" class="btn btn-default" href="/stats?qy=zj">浙江</a>
     <a type="button" class="btn btn-default" href="/stats?qy=js">江苏</a>
 </div>
 <table class="table table-hover table-bordered">
     <thead>
-        <tr>
-            <th colspan="4" class="text-center">投放流程数据统计</th>
-        </tr>
-        <tr>
-            <th>时间</th>
-            <th>来源数据</th>
-            <th>广告数据量</th>
-            <th>电信写入量</th>
-        </tr>
+    <tr>
+        <th colspan="4" class="text-center">投放流程数据统计</th>
+    </tr>
+    <tr>
+        <th>时间</th>
+        <th>来源数据</th>
+        <th>广告数据量</th>
+        <th>电信写入量</th>
+    </tr>
     </thead>
     <tbody>
-        {{range $k,$v:=.info}}
-        {{if lt 0 ($v.Data|len)}}
-        <tr>
-            <td>{{$v.Timestamp}}</td>
-            <td>
-                {{with index $v.Data 0}}
-                    {{range $kk,$vv:=.Data}}
-                        {{$kk}} : {{$vv}}
-                    {{end}}
-                {{end}}
-            </td>
-            <td>
-                {{with index $v.Data 1}}
-                    {{range $kk,$vv:=.Data}}
-                        {{$kk}} : {{$vv}}
-                    {{end}}
-                {{end}}
-            </td>
-            <td>
-                {{with index $v.Data 2}}
-                    {{range $kk,$vv:=.Data}}
-                        {{$kk}}
-                    {{end}}
-                {{end}}
-            </td>
-        </tr>
-        {{end}}
-        {{end}}
+    {{if lt 0 (.info|len)}}
+    {{range $k, $v:=.info}}
+    {{if lt 0 ($v.Data|len)}}
+    <tr>
+        <td>
+        {{$v}}
+        </td>
+    </tr>
+    {{end}}
+    {{end}}
+    {{end}}
     </tbody>
 </table>
 </body>

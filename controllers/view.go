@@ -19,7 +19,7 @@ type DataResult struct {
 
 type ViewDataResultAry struct {
 	Timestamp string
-	Data      DataResultAry
+	Data      []DataResultAry
 }
 
 type DataResultAry []DataResult
@@ -51,6 +51,7 @@ func (this *ViewController) request(param url.Values) (map[string]interface{}, e
 	if err != nil {
 		return nil, err
 	}
+
 	if v, _ := sj.Get("ret").String(); v == "0" {
 		return sj.Get("data").Map()
 	}
@@ -70,6 +71,7 @@ func (this *ViewController) sourceData(bt string, et string) (res DataResultAry)
 	if err != nil {
 		return nil
 	}
+
 	res = make(DataResultAry, 0, len(info))
 	for k, v := range info {
 		ks := strings.Split(k, "_")
@@ -150,14 +152,17 @@ func (this *ViewController) merageData(btime int, etime int, ds ...DataResultAry
 	for t := etime; t > btime; t = t - 3600 {
 		var drs = ViewDataResultAry{}
 		drs.Timestamp = timestamp.GetUnixFormat(convert.ToString(t))
-		drs.Data = make(DataResultAry, 0, len(ds))
+		drs.Data = make([]DataResultAry, 0, len(ds))
 		for _, v := range ds {
+			var dra = make(DataResultAry, 0, 10)
 			for _, vv := range v {
 				if convert.ToString(t) == vv.Timestamp {
 					vv.Timestamp = timestamp.GetUnixFormat(vv.Timestamp)
-					drs.Data = append(drs.Data, vv)
-					break
+					dra = append(dra, vv)
 				}
+			}
+			if len(dra) > 0 {
+				drs.Data = append(drs.Data, dra)
 			}
 		}
 		res = append(res, drs)
@@ -167,18 +172,24 @@ func (this *ViewController) merageData(btime int, etime int, ds ...DataResultAry
 
 func (this *ViewController) Index() {
 	var (
-		pre   = this.GetString("qy", "zj")
-		btime = this.GetString("btime", pre+"_"+
-			convert.ToString(convert.ToInt(timestamp.GetDayTimestamp(0))-3600))
-		etime = this.GetString("etime", pre+"_"+timestamp.GetHourTimestamp(-1))
+		pre    = this.GetString("qy", "zj")
+		dbtime = convert.ToString(convert.ToInt(timestamp.GetDayTimestamp(0)) - 86400)
+		detime = timestamp.GetHourTimestamp(-1)
+		btime  = this.GetString("btime", dbtime)
+		etime  = this.GetString("etime", detime)
 	)
 
-	source := this.sourceData(btime, etime)
-	advert := this.advertData(btime, etime)
-	dianx := this.dianxinData(btime, etime)
+	pbtime := pre + "_" + btime
+	petime := pre + "_" + etime
+
+	source := this.sourceData(pbtime, petime)
+	advert := this.advertData(pbtime, petime)
+	dianx := this.dianxinData(pbtime, petime)
+
 	beego.Error(source)
 	beego.Error(advert)
 	beego.Error(dianx)
+
 	this.Data["info"] = this.merageData(convert.ToInt(btime), convert.ToInt(etime),
 		source, advert, dianx)
 	this.TplName = "view.tpl"
