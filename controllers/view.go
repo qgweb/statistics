@@ -191,7 +191,7 @@ func (this *ViewController) Index() {
 	var (
 		pre    = this.GetString("qy", "zj")
 		dbtime = convert.ToString(convert.ToInt(timestamp.GetDayTimestamp(0)) - 86400)
-		detime = timestamp.GetHourTimestamp(-1)
+		detime = timestamp.GetHourTimestamp(0)
 		btime  = this.GetString("btime", dbtime)
 		etime  = this.GetString("etime", detime)
 	)
