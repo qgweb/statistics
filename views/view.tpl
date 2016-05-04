@@ -28,17 +28,24 @@
     </tr>
     </thead>
     <tbody>
-    {{if lt 0 (.info|len)}}
-    {{range $k, $v:=.info}}
-    {{if lt 0 ($v.Data|len)}}
-    <tr>
-        <td>
-        {{$v}}
-        </td>
-    </tr>
-    {{end}}
-    {{end}}
-    {{end}}
+        {{range $k,$v:= .info}}
+        <tr>
+            <td>{{$v.Timestamp | unix}}</td>
+            <td>
+                {{range $kk,$vv:=$v.SourceData}}
+                    {{$kk}} - {{$vv}}<br>
+                {{end}}
+            </td>
+            <td>
+                {{range $kk,$vv:=$v.AdvertData}}
+                {{$kk}} - {{$vv}}<br>
+                {{end}}
+            </td>
+            <td>
+                {{$v.DXData}}
+            </td>
+        </tr>
+        {{end}}
     </tbody>
 </table>
 </body>

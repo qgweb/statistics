@@ -8,32 +8,33 @@ import (
 	"github.com/qgweb/new/lib/convert"
 	"github.com/qgweb/new/lib/timestamp"
 	"net/url"
+
 	"sort"
 	"strings"
 )
 
-type DataResult struct {
-	Timestamp string
-	Data      map[string]string
+type Result struct {
+	Timestamp  int
+	SourceData map[string]string `数据源数据量`
+	AdvertData map[string]string `广告数据量`
+	DXData     string            `写入电信的量`
 }
 
-type ViewDataResultAry struct {
-	Timestamp string
-	Data      []DataResultAry
+type Results []Result
+
+func (this Results) Less(i, j int) bool {
+	if this[i].Timestamp > this[j].Timestamp {
+		return true
+	}
+	return false
 }
 
-type DataResultAry []DataResult
-
-func (dr DataResultAry) Len() int {
-	return len(dr)
+func (this Results) Len() int {
+	return len(this)
 }
 
-func (dr DataResultAry) Less(i, j int) bool {
-	return dr[i].Timestamp < dr[i].Timestamp
-}
-
-func (dr DataResultAry) Swap(i, j int) {
-	dr[i], dr[j] = dr[j], dr[i]
+func (this Results) Swap(i, j int) {
+	this[i], this[j] = this[j], this[i]
 }
 
 type ViewController struct {
@@ -51,7 +52,7 @@ func (this *ViewController) request(param url.Values) (map[string]interface{}, e
 	if err != nil {
 		return nil, err
 	}
-
+	beego.Info(sj, param)
 	if v, _ := sj.Get("ret").String(); v == "0" {
 		return sj.Get("data").Map()
 	}
@@ -61,7 +62,7 @@ func (this *ViewController) request(param url.Values) (map[string]interface{}, e
 }
 
 // 来源数据
-func (this *ViewController) sourceData(bt string, et string) (res DataResultAry) {
+func (this *ViewController) sourceData(bt string, et string) map[string]map[string]string {
 	var param = url.Values{}
 	param.Set("db", "dsource_stats")
 	param.Set("bkey", bt)
@@ -72,27 +73,20 @@ func (this *ViewController) sourceData(bt string, et string) (res DataResultAry)
 		return nil
 	}
 
-	res = make(DataResultAry, 0, len(info))
+	res := make(map[string]map[string]string)
 	for k, v := range info {
 		ks := strings.Split(k, "_")
-		dr := DataResult{}
-		dr.Timestamp = ks[1]
-		dr.Data = map[string]string{
-			ks[2]: convert.ToString(v.(map[string]interface{})["Value"]),
+		if _, ok := res[ks[1]]; !ok {
+			res[ks[1]] = make(map[string]string)
 		}
-		beego.Info(dr)
-		res = append(res, dr)
+		res[ks[1]][ks[2]] = convert.ToString(v.(map[string]interface{})["Value"])
 	}
-	sort.Sort(res)
 
-	for _, v := range res {
-		beego.Error(v.Timestamp)
-	}
 	return res
 }
 
 // 广告数据
-func (this *ViewController) advertData(bt string, et string) (res DataResultAry) {
+func (this *ViewController) advertData(bt string, et string) map[string]map[string]string {
 	var param = url.Values{}
 	param.Set("db", "advert_stats")
 	param.Set("bkey", bt)
@@ -102,27 +96,20 @@ func (this *ViewController) advertData(bt string, et string) (res DataResultAry)
 	if err != nil {
 		return nil
 	}
-	res = make(DataResultAry, 0, len(info))
+	res := make(map[string]map[string]string)
 	for k, v := range info {
 		ks := strings.Split(k, "_")
-		dr := DataResult{}
-		dr.Timestamp = ks[1]
-		dr.Data = map[string]string{
-			ks[2]: convert.ToString(v.(map[string]interface{})["Value"]),
+		if _, ok := res[ks[1]]; !ok {
+			res[ks[1]] = make(map[string]string)
 		}
-		beego.Info(dr)
-		res = append(res, dr)
+		res[ks[1]][ks[2]] = convert.ToString(v.(map[string]interface{})["Value"])
 	}
-	sort.Sort(res)
 
-	for _, v := range res {
-		beego.Error(v.Timestamp)
-	}
 	return res
 }
 
 // 写入dpi数据
-func (this *ViewController) dianxinData(bt string, et string) (res DataResultAry) {
+func (this *ViewController) dianxinData(bt string, et string) map[string]map[string]string {
 	var param = url.Values{}
 	param.Set("db", "dx_stats")
 	param.Set("bkey", bt)
@@ -132,41 +119,71 @@ func (this *ViewController) dianxinData(bt string, et string) (res DataResultAry
 	if err != nil {
 		return nil
 	}
-	res = make(DataResultAry, 0, len(info))
+	res := make(map[string]map[string]string)
 	for k, v := range info {
 		ks := strings.Split(k, "_")
-		dr := DataResult{}
-		dr.Timestamp = ks[1]
-		dr.Data = map[string]string{
-			convert.ToString(v.(map[string]interface{})["Value"]): "0",
+		if _, ok := res[ks[1]]; !ok {
+			res[ks[1]] = make(map[string]string)
 		}
-		res = append(res, dr)
+		count := convert.ToString(v.(map[string]interface{})["Value"])
+		res[ks[1]][count] = count
 	}
-	sort.Sort(res)
+
 	return res
 }
 
 // 合并数据
-func (this *ViewController) merageData(btime int, etime int, ds ...DataResultAry) []ViewDataResultAry {
-	var res = make([]ViewDataResultAry, 0, 24)
-	for t := etime; t > btime; t = t - 3600 {
-		var drs = ViewDataResultAry{}
-		drs.Timestamp = timestamp.GetUnixFormat(convert.ToString(t))
-		drs.Data = make([]DataResultAry, 0, len(ds))
-		for _, v := range ds {
-			var dra = make(DataResultAry, 0, 10)
-			for _, vv := range v {
-				if convert.ToString(t) == vv.Timestamp {
-					vv.Timestamp = timestamp.GetUnixFormat(vv.Timestamp)
-					dra = append(dra, vv)
-				}
-			}
-			if len(dra) > 0 {
-				drs.Data = append(drs.Data, dra)
+func (this *ViewController) merageData(source, advert, dianx map[string]map[string]string) Results {
+	res := make(Results, 0, 24)
+	searchFun := func(t int) int {
+		for k, v := range res {
+			if v.Timestamp == t {
+				return k
 			}
 		}
-		res = append(res, drs)
+		return -1
 	}
+
+	for k, v := range source {
+		ki := convert.ToInt(k)
+		if i := searchFun(ki); i != -1 {
+			res[i].SourceData = v
+		} else {
+			rt := Result{}
+			rt.Timestamp = ki
+			rt.SourceData = v
+			res = append(res, rt)
+		}
+	}
+
+	for k, v := range advert {
+		ki := convert.ToInt(k)
+		if i := searchFun(ki); i != -1 {
+			res[i].AdvertData = v
+		} else {
+			rt := Result{}
+			rt.Timestamp = ki
+			rt.AdvertData = v
+			res = append(res, rt)
+		}
+	}
+
+	for k, v := range dianx {
+		ki := convert.ToInt(k)
+		vi := ""
+		for kk, _ := range v {
+			vi = kk
+		}
+		if i := searchFun(ki); i != -1 {
+			res[i].DXData = vi
+		} else {
+			rt := Result{}
+			rt.Timestamp = ki
+			rt.DXData = vi
+			res = append(res, rt)
+		}
+	}
+
 	return res
 }
 
@@ -190,7 +207,8 @@ func (this *ViewController) Index() {
 	beego.Error(advert)
 	beego.Error(dianx)
 
-	this.Data["info"] = this.merageData(convert.ToInt(btime), convert.ToInt(etime),
-		source, advert, dianx)
+	result := this.merageData(source, advert, dianx)
+	sort.Sort(result)
+	this.Data["info"] = result
 	this.TplName = "view.tpl"
 }
