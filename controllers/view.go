@@ -1,13 +1,14 @@
 package controllers
 
 import (
+	"net/url"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/httplib"
 	"github.com/bitly/go-simplejson"
 	"github.com/juju/errors"
 	"github.com/qgweb/new/lib/convert"
 	"github.com/qgweb/new/lib/timestamp"
-	"net/url"
 
 	"sort"
 	"strings"
@@ -195,7 +196,7 @@ func (this *ViewController) Index() {
 		btime  = this.GetString("btime", dbtime)
 		etime  = this.GetString("etime", detime)
 	)
-
+	this.EnableRender = true
 	pbtime := pre + "_" + btime
 	petime := pre + "_" + etime
 

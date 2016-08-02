@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/qgweb/gossdb"
+	"github.com/seefan/gossdb"
 )
 
 type SDBType struct {

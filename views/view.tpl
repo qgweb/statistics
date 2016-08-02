@@ -14,6 +14,7 @@
 <div class="btn-group" role="group">
     <a type="button" class="btn btn-default" href="/stats?qy=zj">浙江</a>
     <a type="button" class="btn btn-default" href="/stats?qy=js">江苏</a>
+    <a type="button" class="btn btn-default" href="/stats?qy=sh">上海</a>
 </div>
 <table class="table table-hover table-bordered">
     <thead>

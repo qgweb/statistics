@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/astaxie/beego"
+	"github.com/qgweb/new/lib/convert"
 	"github.com/qgweb/new/lib/timestamp"
 	_ "github.com/qgweb/statistics/routers"
-	"github.com/qgweb/new/lib/convert"
 )
 
 func TimeParse(val interface{}) string {

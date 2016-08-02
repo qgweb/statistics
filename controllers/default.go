@@ -1,11 +1,11 @@
 package controllers
 
 import (
+	"strings"
 	"github.com/astaxie/beego"
 	"github.com/juju/errors"
 	"github.com/qgweb/new/lib/convert"
 	"github.com/qgweb/statistics/models"
-	"strings"
 )
 
 type MainController struct {
@@ -96,6 +96,7 @@ func (c *MainController) Post() {
 	default:
 		err := sdb.Set(db, key, value)
 		c.Return("", err)
+		return
 	}
 }
 
